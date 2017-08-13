@@ -1,6 +1,6 @@
 #!/bin/bash
-if [ $# -ne 1 ];then
-    echo "$0 端口"
+if [ $# -ne 2 ];then
+    echo "$0 端口 流量限制(MB)"
     exit
 fi
 
@@ -18,6 +18,7 @@ function checkPort()
 err_log="error.log"
 #启动容器
 port=$1
+limit=$2
 res=$(checkPort $port)
 if [ $res -eq 1 ];then
     echo "端口:${port}已经使用"|tee -a $err_log
@@ -39,7 +40,7 @@ iptables -A FORWARD -p tcp -d $ip
 iptables -nvL
 
 #保存配置
-echo $ip >> user_list
+echo "$ip $port $limit $container_id">> user_list
 iptables-save > iptab.save
 
 echo "添加成功,container_id:${container_id}"

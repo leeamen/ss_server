@@ -16,9 +16,11 @@ function isNumber()
 
 
 #获取用户信息:消耗 是否超限(1:超限)
-function getUserInfo()
+function statiUserInfo()
 {
-    iptables -nv -L FORWARD -x --line-numbers|grep "${user_ip}"|awk -v limit=${LIMIT} '
+    user_ip=$1
+    limit=$2
+    iptables -nv -L FORWARD -x --line-numbers|grep "${user_ip}"|awk -v limit=${limit} '
     BEGIN{trans = 0.;stat=0}
     {#print $3;
     trans += $3}
@@ -29,25 +31,18 @@ function getUserInfo()
     }'
 }
 
-if [ $# -ne 1 ];then
-    echo "$0 ip列表文件"
-    exit
-fi
-#流量50G
-LIMIT=10240
-
-#日志文件
-log_file="$(date +%Y%m%d).log"
-
-user_file="$1"
-while true
-do
-    while read user_ip
+function monitorByUserFile()
+{
+    user_file=$1
+    while read line
     do
-        res=$(getUserInfo $user_ip)
+        user_ip=$(echo $line|awk '{print $1}')
+        limit=$(echo $line|awk '{print $3}')
+        echo "$user_ip, ${limit}"
+        res=$(statiUserInfo $user_ip $limit)
         trans=$(echo "$res"|awk '{print $1}')
         stat=$(echo "$res"|awk '{print $2}')
-        echo "用户:${user_ip}, 消耗流量:${trans}MB,限制:${LIMIT}MB"
+        echo "用户:${user_ip}, 消耗流量:${trans}MB,限制:${limit}MB"
         if [ $stat -eq 1 ];then
             port=$(ps -ef|grep docker|grep "${user_ip}"|awk '{print $NF}')
             res=$(isNumber $port)
@@ -62,6 +57,20 @@ do
         fi
         sleep 1
     done < ${user_file}
+}
+
+if [ $# -ne 1 ];then
+    echo "$0 ip列表文件"
+    exit
+fi
+
+#日志文件
+log_file="$(date +%Y%m%d).log"
+
+user_file="$1"
+while true
+do
+    monitorByUserFile $user_file
     sleep 30
     #clear
 done

@@ -13,6 +13,7 @@ iptables -nv -L FORWARD
 iptables -D FORWARD -p tcp -d $ip
 iptables -D FORWARD -p tcp -s $ip
 iptables -nv -L FORWARD
+iptables-save > iptab.save
 echo "清除iptables表项"
 
 #删除docker

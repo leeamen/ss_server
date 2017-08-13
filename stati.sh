@@ -38,7 +38,7 @@ function monitorByUserFile()
     do
         user_ip=$(echo $line|awk '{print $1}')
         limit=$(echo $line|awk '{print $3}')
-        echo "$user_ip, ${limit}"
+    #    echo "$user_ip, ${limit}"
         res=$(statiUserInfo $user_ip $limit)
         trans=$(echo "$res"|awk '{print $1}')
         stat=$(echo "$res"|awk '{print $2}')
